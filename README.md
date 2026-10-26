@@ -1,10 +1,7 @@
 <p align="center">
-  <a href="https://getartcraft.com/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/brand/artcraft-logo-white.svg">
-      <img alt="ArtCraft" src="docs/brand/artcraft-logo.svg" width="200">
-    </picture>
-  </a>
+  <b>WordCraft</b> — internal fork of
+  <a href="https://github.com/storytold/wordcraft">storytold/wordcraft</a> (Web-control bridge for the DIY Office agent shell).
+  ArtCraft brand assets removed per <code>docs/brand/LICENSE-brand.txt</code> fork terms (upstream history retains them).
 </p>
 
 <p align="center">
@@ -385,12 +382,10 @@ do Russian, Portuguese, Czech, Italian, Croatian and Turkish spelling (how to in
 Polish hyphenation the TeX patterns by Hanna Kołodziejska, Bogusław Jackowski and Marek Ryćko (MIT
 option). The sample documents and templates are original text written for WordCraft.
 
-The ArtCraft name, wordmark and logos in [`docs/brand/`](docs/brand/) are trademarks of the
-ArtCraft Team and are not covered by this license. They may be used only unmodified, and only as
-part of this repository and WordCraft, under [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt).
-Forks and modified versions must remove them.
+The ArtCraft name, wordmark and logos (originally in `docs/brand/`) are trademarks of the
+ArtCraft Team and are not covered by this license. Per the fork terms in upstream
+`docs/brand/LICENSE-brand.txt`, this fork has removed them.
 
 <p align="center">
-  <a href="https://getartcraft.com/"><img alt="ArtCraft" src="docs/brand/artcraft-mark.svg" width="28"></a><br>
-  <sub>Made by the <a href="https://getartcraft.com/">ArtCraft</a> team and community.</sub>
+  <sub>Upstream WordCraft is made by the ArtCraft team and community; this fork carries the original MIT/Apache notices.</sub>
 </p>
