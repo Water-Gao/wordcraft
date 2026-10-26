@@ -56,7 +56,11 @@ fn craft_fonts(dir: &std::path::Path) -> Result<(String, Vec<String>), String> {
         let [family, style, file, scripts, ..] = f.as_slice() else {
             return Err(format!("malformed manifest line: {line}"));
         };
-        if wasm && !scripts.split(',').any(|s| s.trim() == "Geor") {
+        // Fork deviation from upstream: upstream embeds only the Georgian face on web to stay
+        // within its size budget. We serve the editor inside our local shell and need
+        // Simplified Chinese, so embed the Hans face too (Japanese text renders through the
+        // kana coverage in the SC face).
+        if wasm && !scripts.split(',').any(|s| matches!(s.trim(), "Geor" | "Hans")) {
             continue;
         }
         let path = dir.join(file).canonicalize().map_err(|e| format!("{file}: {e}"))?;
