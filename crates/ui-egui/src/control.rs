@@ -395,7 +395,9 @@ pub fn handle(app: &mut WordApp, ctx: &egui::Context, req: &ControlRequest) -> O
 
 /// A page rendered by the engine, as base64 PNG in the reply (the same shape as the headless
 /// MCP server's `ui.render`).
-fn render_png(session: &wordcraft_engine::Session, page: u64, scale: f32) -> Result<Value, String> {
+/// Renders one page of `session` to an in-memory PNG (`ui.render` without a `path`); shared with
+/// the web app's host bridge, which has no file system to write to.
+pub fn render_png(session: &wordcraft_engine::Session, page: u64, scale: f32) -> Result<Value, String> {
     let page = usize::try_from(page.max(1)).unwrap_or(usize::MAX).saturating_sub(1);
     let l = session.export_layout();
     let pg = l.pages.get(page).ok_or_else(|| format!("no page {}", page.saturating_add(1)))?;

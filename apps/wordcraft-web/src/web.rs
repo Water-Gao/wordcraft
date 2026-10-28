@@ -31,6 +31,7 @@ pub fn start() {
         // what it saves (`host`). That page guards leaving it, so this one doesn't.
         let bridge = if query_param("host").as_deref() == Some("parent") { crate::host::Bridge::new() } else { None };
         let app_bridge = bridge.clone();
+        let exec_queue = app_bridge.as_ref().map(|b| b.exec_queue());
         let dirty = Rc::new(Cell::new(false));
         let saves = AsyncSaves::default();
         if bridge.is_none()
@@ -99,7 +100,7 @@ pub fn start() {
                         crate::host::Bridge::set_author(&mut app, &author);
                         prefs.keep_own_author(&app.session.author, &own);
                     }
-                    Ok(Box::new(WebShell { app, inbox, messages, prefs }))
+                    Ok(Box::new(WebShell { app, inbox, messages, prefs, exec: exec_queue, bridge: app_bridge.clone() }))
                 }),
             )
             .await;
@@ -128,12 +129,16 @@ fn query_param(key: &str) -> Option<String> {
 }
 
 /// Wraps the app to read dropped files asynchronously (browsers can't read them synchronously)
-/// and feed them through the inbox.
+/// and feed them through the inbox, and to run the parent's `wordcraft:execute` requests.
 struct WebShell {
     app: WordApp,
     inbox: Inbox,
     messages: Rc<RefCell<Vec<String>>>,
     prefs: crate::prefs::PrefsSync,
+    /// The host command channel: queued `wordcraft:execute` requests (host mode only).
+    exec: Option<crate::host::ExecQueue>,
+    /// Answers the requests back to the parent page (host mode only).
+    bridge: Option<crate::host::Bridge>,
 }
 
 fn local_storage() -> Option<web_sys::Storage> {
@@ -150,6 +155,15 @@ impl eframe::App for WebShell {
     /// then writes changed preferences to browser storage immediately, because a reload or closed
     /// tab never runs the exit path.
     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // Host command channel first: run and answer the parent's queued `wordcraft:execute`
+        // before the app draws, so the change a reply describes is on screen in the same frame.
+        let requests = self.exec.as_ref().map(|q| std::mem::take(&mut *q.borrow_mut())).unwrap_or_default();
+        for req in requests {
+            let r = crate::host::execute(&mut self.app, &req);
+            if let Some(bridge) = &self.bridge {
+                bridge.post_result(req.id, &r);
+            }
+        }
         let msgs = std::mem::take(&mut *self.messages.borrow_mut());
         for msg in msgs {
             self.app.status(msg);

@@ -1699,7 +1699,7 @@ impl WordApp {
     }
 
     /// Requests commands make of the UI (open a dialog…).
-    pub(crate) fn handle_request(&mut self, req: &Value) {
+    pub fn handle_request(&mut self, req: &Value) {
         // Made for a document that isn't shown (an agent's command run there): its window handles
         // it when it draws.
         if let Some(document) = req.get("document").and_then(Value::as_u64)
