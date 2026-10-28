@@ -12,12 +12,16 @@ pub const KEY: &str = "wordcraft.ui";
 const MAX_STORED: usize = 4 << 20;
 
 /// Apply preferences stored on an earlier visit. Missing, oversized or unreadable values leave
-/// the defaults.
+/// the defaults. This fork uses Simplified Chinese instead of the upstream automatic locale;
+/// an explicit non-automatic language choice still survives reloads.
 pub fn restore(app: &mut WordApp, stored: Option<&str>) {
     if let Some(s) = stored.filter(|s| s.len() <= MAX_STORED)
         && let Some(ui) = UiState::from_json(s.as_bytes())
     {
         app.apply_prefs(ui);
+    }
+    if app.ui.language == wordcraft_ui_egui::i18n::AUTO {
+        app.ui.language = "zh-hans".into();
     }
 }
 
@@ -105,6 +109,7 @@ mod tests {
     #[test]
     fn dark_mode_survives_reload() {
         let mut first = app();
+        first.ui.language = "zh-hans".into();
         let mut sync = PrefsSync::new(None);
         let initial = sync.changed(&first);
         assert!(initial.is_some(), "first frame stores the preferences");
@@ -125,5 +130,21 @@ mod tests {
             restore(&mut a, junk);
             assert_eq!(a.ui.theme, wordcraft_ui_egui::theme::Appearance::System, "junk keeps the default appearance");
         }
+    }
+
+    #[test]
+    fn chinese_is_default_and_explicit_english_survives_reload() {
+        for stored in [None, Some(r#"{"language":"auto"}"#)] {
+            let mut a = app();
+            restore(&mut a, stored);
+            assert_eq!(a.ui.language, "zh-hans");
+        }
+
+        let mut first = app();
+        first.run("ui.language", json!({"value": "en"})).unwrap();
+        let stored = PrefsSync::new(None).changed(&first).expect("the language choice is stored");
+        let mut reloaded = app();
+        restore(&mut reloaded, Some(&stored));
+        assert_eq!(reloaded.ui.language, "en");
     }
 }

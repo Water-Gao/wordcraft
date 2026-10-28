@@ -720,29 +720,23 @@ fn animations_picker(app: &mut WordApp, ui: &mut Ui) {
     }
 }
 
-/// Interface language: follow the system (the default) or pick one (#8).
+/// Interface language: this fork offers Simplified Chinese and English.
 fn language_picker(app: &mut WordApp, ui: &mut Ui) {
-    use crate::i18n::{AUTO, Lang};
+    use crate::i18n::Lang;
     // The language names are in their own scripts: fonts for them load from the next frame.
     app.want_system_cjk = true;
-    let system = crate::i18n::system_lang();
-    let auto_label = crate::i18n::fmt(tl!("Automatic ({language})"), &[("language", system.name())]);
-    let current = if app.ui.language == AUTO { auto_label.clone() } else { Lang::from_pref(&app.ui.language).name().to_string() };
+    let current = tl!(Lang::from_pref(&app.ui.language).name()).to_string();
     ui.horizontal(|ui| {
         let label = ui.label(tl!("Interface language:"));
         let combo = egui::ComboBox::from_id_salt("interface_language").selected_text(current).width(220.0).show_ui(ui, |ui| {
-            if ui.selectable_label(app.ui.language == AUTO, auto_label.as_str()).clicked() {
-                let _ = app.run("ui.language", json!({"value": AUTO}));
-            }
-            for lang in Lang::for_picker() {
-                if ui.selectable_label(app.ui.language == lang.code(), lang.name()).clicked() {
+            for lang in [Lang::from_code("zh-hans"), Some(Lang::EN)].into_iter().flatten() {
+                if ui.selectable_label(app.ui.language == lang.code(), tl!(lang.name())).clicked() {
                     let _ = app.run("ui.language", json!({"value": lang.code()}));
                 }
             }
         });
         combo.response.labelled_by(label.id);
     });
-    ui.label(RichText::new(tl!("Automatic follows your system's language. Menus and commands change; your documents don't.")).small().weak());
 }
 
 /// Deserialize `input` over `T`'s defaults one setting at a time: a value of the wrong type is
