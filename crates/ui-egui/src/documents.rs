@@ -47,6 +47,7 @@ impl WordApp {
         self.window_shows(id);
 
         self.canvas.show_other_document(seen);
+        self.reset_secondary_viewport();
         self.controls = Default::default();
         self.dialog = None;
         self.colors = None;

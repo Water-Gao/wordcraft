@@ -90,6 +90,7 @@ pub mod window_close;
 pub mod window_geometry;
 mod window_ui;
 mod windows;
+pub mod workspace;
 pub mod wordart_menus;
 pub mod zotero;
 
@@ -582,6 +583,9 @@ pub struct WordApp {
     pub printing: printing::State,
     print_feedback_seen: Option<printing::Feedback>,
     pub canvas: canvas::CanvasState,
+    /// The other same-document viewport; swapped with `canvas` only while drawing or changing focus.
+    pub secondary_canvas: canvas::CanvasState,
+    pub workspace: workspace::Workspace,
     /// Content control frames, check boxes and lists on the page.
     pub controls: content_controls::ControlUi,
     pub dialog: Option<dialogs::Dialog>,
@@ -882,6 +886,8 @@ impl WordApp {
             windows: windows::Windows::new(shown_document),
             print_document: None,
             canvas,
+            secondary_canvas: canvas::CanvasState::default(),
+            workspace: workspace::Workspace::default(),
             controls,
             dialog,
             colors,
@@ -2935,7 +2941,7 @@ impl WordApp {
             }
             let fill = if screen == chrome::Screen::Focus { chrome::FOCUS_CANVAS } else { t.canvas };
             egui::CentralPanel::default().frame(egui::Frame::NONE.fill(fill)).show(ui, |ui| {
-                canvas::show(self, ui);
+                workspace::show(self, ui);
             });
             if self.focus_ribbon && !moved(self) {
                 chrome::focus_ribbon(self, ctx);

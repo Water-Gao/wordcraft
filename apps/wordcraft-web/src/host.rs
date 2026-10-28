@@ -118,7 +118,12 @@ impl Bridge {
     }
 
     pub fn post_ready(&self) {
-        self.send(&[("type", "wordcraft:ready".into()), ("version", env!("CARGO_PKG_VERSION").into())]);
+        let capabilities = js_sys::Array::of1(&JsValue::from_str("dual-pane"));
+        self.send(&[
+            ("type", "wordcraft:ready".into()),
+            ("version", env!("CARGO_PKG_VERSION").into()),
+            ("capabilities", capabilities.into()),
+        ]);
     }
 
     /// The app couldn't start (no WebGPU or WebGL2, for example): let the parent say so.
@@ -259,6 +264,19 @@ pub fn execute(app: &mut WordApp, req: &ExecRequest) -> Result<Value, String> {
                 .map(|c| json!({"id": c.id, "label": c.label, "location": c.location, "shortcut": c.shortcut, "params": c.params, "enabled": app.session.why_disabled(c.id).is_none()}))
                 .collect();
             Ok(Value::Array(commands))
+        }
+        "workspace.inspect" => Ok(app.workspace_snapshot()),
+        "workspace.setSplit" => {
+            let enabled = p.get("enabled").and_then(Value::as_bool).unwrap_or(false);
+            app.set_split(enabled);
+            Ok(app.workspace_snapshot())
+        }
+        "view.focusPane" => {
+            let Some(pane) = p.get("pane").and_then(Value::as_str).and_then(wordcraft_ui_egui::workspace::Pane::parse) else {
+                return Err("`pane` must be `left` or `right`".into());
+            };
+            app.focus_pane(pane);
+            Ok(app.workspace_snapshot())
         }
         "document.inspect" | "ui.render" if !app.has_document() => Err(NO_DOCUMENT.into()),
         "document.inspect" => app.session.run("document.inspect", p).map_err(|e| e.to_string()),

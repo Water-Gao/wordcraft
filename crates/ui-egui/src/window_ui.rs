@@ -156,6 +156,8 @@ impl WordApp {
             // App-wide.
             session: _,
             services: _,
+            secondary_canvas: _,
+            workspace: _,
             printing: _,
             print_feedback_seen: _,
             font_generation: _,
